@@ -146,9 +146,9 @@ fi
 # >>> Backup EXTERNO !
 
 if [ ${flag_externo_mount_auto} -eq 0 ]; then
-	externo="${externo_auto}"
+	externo="${externo_auto}/b4ckups"
 elif [ ${flag_externo_mount_manu} -eq 0 ]; then
-	externo="${externo_manu}"
+	externo="${externo_manu}/b4ckups"
 fi
 
 rm_bkp_antigo ${externo}
@@ -165,7 +165,7 @@ fi
 # >>> DESMONTAGEM da mídia removível
 
 if [ ${flag_externo_mount_auto} -eq 0 ]; then
-	if aux=$(sudo umount ${externo} 2>&1); then
+	if aux=$(sudo umount ${externo%/b4ckups} 2>&1); then
 		msg_final
 	else
 		echo -e " - Não foi possível desmontar o disco (automático) - FALHA !" >> ${log_file}
@@ -173,8 +173,8 @@ if [ ${flag_externo_mount_auto} -eq 0 ]; then
 		msg_final
 	fi
 elif [ ${flag_externo_mount_manu} -eq 0 ]; then
-	if aux=$(sudo umount ${externo} 2>&1); then
-		rmdir ${externo}
+	if aux=$(sudo umount ${externo%/b4ckups} 2>&1); then
+		rmdir ${externo%/b4ckups}
 		msg_final
 	else
 		echo -e " - Não foi possível desmontar o disco (manual) - FALHA !" >> ${log_file}
