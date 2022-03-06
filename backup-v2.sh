@@ -39,6 +39,7 @@ arquivo="${data}_${espaco}_backup.zip"
 cloud="/tmp/tmp/dropbox/backup"
 externo_auto="/tmp/tmp/externo/media"
 externo_manu="/tmp/tmp/externo/tmp"
+dir_lvl="b4ckups"
 
 # Flags de controle
 
@@ -146,9 +147,9 @@ fi
 # >>> Backup EXTERNO !
 
 if [ ${flag_externo_mount_auto} -eq 0 ]; then
-	externo="${externo_auto}/b4ckups"
+	externo="${externo_auto}/${dir_lvl}"
 elif [ ${flag_externo_mount_manu} -eq 0 ]; then
-	externo="${externo_manu}/b4ckups"
+	externo="${externo_manu}/${dir_lvl}"
 fi
 
 rm_bkp_antigo ${externo}
@@ -165,7 +166,7 @@ fi
 # >>> DESMONTAGEM da mídia removível
 
 if [ ${flag_externo_mount_auto} -eq 0 ]; then
-	if aux=$(sudo umount ${externo%/b4ckups} 2>&1); then
+	if aux=$(sudo umount ${externo%/${dir_lvl}} 2>&1); then
 		msg_final
 	else
 		echo -e " - Não foi possível desmontar o disco (automático) - FALHA !" >> ${log_file}
@@ -173,8 +174,8 @@ if [ ${flag_externo_mount_auto} -eq 0 ]; then
 		msg_final
 	fi
 elif [ ${flag_externo_mount_manu} -eq 0 ]; then
-	if aux=$(sudo umount ${externo%/b4ckups} 2>&1); then
-		rmdir ${externo%/b4ckups}
+	if aux=$(sudo umount ${externo%/${dir_lvl}} 2>&1); then
+		rmdir ${externo%/${dir_lvl}}
 		msg_final
 	else
 		echo -e " - Não foi possível desmontar o disco (manual) - FALHA !" >> ${log_file}
