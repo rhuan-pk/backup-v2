@@ -92,7 +92,7 @@ rm_bkp_antigo() {
 				nomes_arquivos[${i}]=$(ls -1 ${path} | grep -E "^.*(${espaco}).*$" | sed -n "$((${i}+1))p")
 			fi
 			if [ ${j} -eq 1 ]; then
-				diff_day=$((${dia_atual}-${dias_criacao[${i}]}))
+				diff_day="$((${dia_atual#0}-${dias_criacao[${i}]#0}))"
 				if [ ${diff_day} -ge ${tempo_exclusao} ]; then
 					rm -v ${path}/${nomes_arquivos[${i}]}
 				elif [ ${diff_day} -lt 0 ]; then
@@ -118,7 +118,7 @@ echo -e "\n---------- Iniciado [${data} * $(date +%T)] ----------" >> ${log_file
 
 rm_bkp_antigo ${cloud}
 
-if aux=$(for ((i=0;i<${#busca[@]};++i)); do zip -r ${cloud}/${arquivo} ${busca[${i}]}; done 2>&1); then
+if aux=$(for ((i=0;i<${#busca[@]};++i)); do zip -ry ${cloud}/${arquivo} ${busca[${i}]}; done 2>&1); then
 	echo -e "\n[${data} * $(date +%T)] --- PROCESSO CLOUD INICIADO ---\n" >> ${log_file}
 	echo -e "[${data} * $(date +%T)] - Atualização do backup realizada - SUCESSO ! " >> ${log_file}
 else
@@ -154,7 +154,7 @@ fi
 
 rm_bkp_antigo ${externo}
 
-if aux=$(for ((i=0;i<${#busca[@]};++i)); do zip -r ${externo}/${arquivo} ${busca[${i}]}; done 2>&1); then
+if aux=$(for ((i=0;i<${#busca[@]};++i)); do zip --recurse-paths --symlinks ${externo}/${arquivo} ${busca[${i}]}; done 2>&1); then
 	echo -e "\n[${data} * $(date +%T)] --- PROCESSO EXTERNO INICIADO ---\n" >> ${log_file}
 	echo -e "[${data} * $(date +%T)] - Atualização do backup realizada - SUCESSO ! " >> ${log_file}
 else
