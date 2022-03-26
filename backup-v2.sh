@@ -56,6 +56,45 @@ msg_final() {
 
 # Função que faz todo o tratamento e execução de qual backup está antigo para ser excluido
 
+get_arr_nomes_arquivos() {
+
+	path=${1}
+	z=1
+
+	for i in $(ls -1 ${path} | sort -t '-' -k '3' | cut -d '-' -f '3' | sort -u); do
+		cont_year=0
+		save_year=""
+		limit_year=$(ls -1 ${path} | egrep "^([[:digit:]]+[[:punct:]]?){2}${i}" | grep -c '.*')
+		for j in $(ls -1 ${path} | egrep "^([[:digit:]]+[[:punct:]]?){2}${i}"); do
+			save_year="${save_year}${j} "
+			let ++cont_year
+			if [ ${cont_year} -eq ${limit_year} ]; then
+				for x in $(echo "${save_year}" | tr ' ' '\n' | sort -t '-' -k '2' | cut -d '-' -f '2' | sort -u); do
+					cont_month=0
+					save_month=""
+					limit_month=$(echo "${save_year}" | tr ' ' '\n' | egrep "^([[:digit:]]+[[:punct:]]?){1}${x}" | grep -c '.*')
+					for y in $(echo "${save_year}" | tr ' ' '\n' | egrep "^([[:digit:]]+[[:punct:]]?){1}${x}"); do
+						save_month="${save_month}${y} "
+						let ++cont_month
+						if [ ${cont_month} -eq ${limit_month} ]; then
+							control_sed=1
+							control_while=${z}
+							while [ ${z} -le $((${limit_month}+$((${control_while}-1)))) ]; do
+								arr_names[$((${z}-1))]=$(echo "${save_month}" | tr ' ' '\n' | sort -n -t '-' -k '1' | sed '1d' | sed -n "${control_sed}p")
+								let ++z
+								let ++control_sed
+							done
+						fi
+					done
+				done
+			fi
+		done
+	done
+
+	echo "${arr_names[@]}"
+
+}
+
 rm_bkp_antigo() {
 
 	path="${1}"
@@ -82,16 +121,20 @@ rm_bkp_antigo() {
 		echo "$(pega_ultimo_dia ${ultima_linha_calendario})"
 	}
 
+	cont=0
+	for file_name in $(get_arr_nomes_arquivos ${path}); do
+		nomes_arquivos[${cont}]="${file_name}"
+		let ++cont
+	done
+
 	qtd_arquivos=$(ls -1 ${path} | grep -E "^.*(${espaco}).*$"  | grep -c '.*')
 	for ((j=0;j<2;++j)); do
 		for ((i=0;i<${qtd_arquivos};++i)); do
 			if [ ${j} -eq 0 ]; then
-				# Outra forma de pegar a data de crição dos arquivos usando o ls com a opção alongada:
-				# ls -l ${path} | tr -s ' ' | cut -d ' ' -f '7' | sed '/^$/d' | sed -n "$((${i}+1))p")
 				dias_criacao[${i}]=$(ls -1 ${path} | grep -E "^.*(${espaco}).*$"  | sed -n "$((${i}+1))p" | cut -c '1-2')
-				nomes_arquivos[${i}]=$(ls -1 ${path} | grep -E "^.*(${espaco}).*$" | sed -n "$((${i}+1))p")
 			fi
 			if [ ${j} -eq 1 ]; then
+				[ ! -e ${path}/${nomes_arquivos[@]: -2: 1} ] && break
 				diff_day="$((${dia_atual#0}-${dias_criacao[${i}]#0}))"
 				if [ ${diff_day} -ge ${tempo_exclusao} ]; then
 					rm -v ${path}/${nomes_arquivos[${i}]}
