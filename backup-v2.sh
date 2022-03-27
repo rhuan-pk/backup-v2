@@ -64,16 +64,16 @@ get_arr_nomes_arquivos() {
 	for i in $(ls -1 ${path} | sort -t '-' -k '3' | cut -d '-' -f '3' | sort -u); do
 		cont_year=0
 		save_year=""
-		limit_year=$(ls -1 ${path} | egrep "^([[:digit:]]+[[:punct:]]?){2}${i}" | grep -c '.*')
-		for j in $(ls -1 ${path} | egrep "^([[:digit:]]+[[:punct:]]?){2}${i}"); do
+		limit_year=$(ls -1 ${path} | egrep "^.*(${espaco}).*$" | egrep "^([[:digit:]]+[[:punct:]]?){2}${i}" | grep -c '.*')
+		for j in $(ls -1 ${path} | egrep "^.*(${espaco}).*$" | egrep "^([[:digit:]]+[[:punct:]]?){2}${i}"); do
 			save_year="${save_year}${j} "
 			let ++cont_year
 			if [ ${cont_year} -eq ${limit_year} ]; then
 				for x in $(echo "${save_year}" | tr ' ' '\n' | sort -t '-' -k '2' | cut -d '-' -f '2' | sort -u); do
 					cont_month=0
 					save_month=""
-					limit_month=$(echo "${save_year}" | tr ' ' '\n' | egrep "^([[:digit:]]+[[:punct:]]?){1}${x}" | grep -c '.*')
-					for y in $(echo "${save_year}" | tr ' ' '\n' | egrep "^([[:digit:]]+[[:punct:]]?){1}${x}"); do
+					limit_month=$(echo "${save_year}" | tr ' ' '\n' | egrep "^.*(${espaco}).*$" | egrep "^([[:digit:]]+[[:punct:]]?){1}${x}" | grep -c '.*')
+					for y in $(echo "${save_year}" | tr ' ' '\n' | egrep "^.*(${espaco}).*$" | egrep "^([[:digit:]]+[[:punct:]]?){1}${x}"); do
 						save_month="${save_month}${y} "
 						let ++cont_month
 						if [ ${cont_month} -eq ${limit_month} ]; then
@@ -127,14 +127,20 @@ rm_bkp_antigo() {
 		let ++cont
 	done
 
-	qtd_arquivos=$(ls -1 ${path} | grep -E "^.*(${espaco}).*$"  | grep -c '.*')
+	qtd_arquivos=$(ls -1 ${path} | grep -E "^.*(${espaco}).*$" | grep -c '.*')
 	for ((j=0;j<2;++j)); do
 		for ((i=0;i<${qtd_arquivos};++i)); do
 			if [ ${j} -eq 0 ]; then
-				dias_criacao[${i}]=$(ls -1 ${path} | grep -E "^.*(${espaco}).*$"  | sed -n "$((${i}+1))p" | cut -c '1-2')
+				dias_criacao[${i}]=$(ls -1 ${path} | grep -E "^.*(${espaco}).*$" | sed -n "$((${i}+1))p" | cut -c '1-2')
 			fi
 			if [ ${j} -eq 1 ]; then
-				[ ! -e ${path}/${nomes_arquivos[@]: -2: 1} ] && break
+				if [ ! -e ${path}/${nomes_arquivos[@]: -2: 1} ]; then
+					break
+				else
+					if [ -z ${nomes_arquivos[@]: -2: 1} ]; then
+						break
+					fi
+				fi
 				diff_day="$((${dia_atual#0}-${dias_criacao[${i}]#0}))"
 				if [ ${diff_day} -ge ${tempo_exclusao} ]; then
 					rm -v ${path}/${nomes_arquivos[${i}]}
